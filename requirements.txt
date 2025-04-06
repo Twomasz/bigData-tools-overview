@@ -1,0 +1,4 @@
+pyspark==3.5.4
+findspark==2.0.1
+cassandra-driver==3.29.2
+hbase-driver==1.0.0
