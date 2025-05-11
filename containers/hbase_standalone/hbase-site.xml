@@ -1,0 +1,53 @@
+<configuration>
+  <!-- Tryb standalone, magazyn danych na lokalnym FS -->
+  <property>
+    <name>hbase.rootdir</name>
+    <value>file:///opt/hbase/data</value>
+  </property>
+  <!-- tryp standalone -->
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>false</value>
+  </property>
+
+  <!-- Wbudowany Zookeeper -->
+  <property>
+    <name>hbase.zookeeper.property.clientPort</name>
+    <value>2181</value>
+  </property>
+  <property>
+    <name>hbase.zookeeper.property.dataDir</name>
+    <value>/opt/hbase/zookeeper</value>
+  </property>
+
+  <!-- Stałe porty (uniknij portów efemerycznych) -->
+  <property>
+    <name>hbase.localcluster.port.ephemeral</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>hbase.master.port</name>
+    <value>16000</value>
+  </property>
+  <property>
+    <name>hbase.master.info.port</name>
+    <value>16010</value>
+  </property>
+  <property>
+    <name>hbase.regionserver.port</name>
+    <value>16020</value>
+  </property>
+  <property>
+    <name>hbase.regionserver.info.port</name>
+    <value>16030</value>
+  </property>
+  <!-- - lokalny dysk jako magazyn danych -->
+  <property>
+    <name>fs.file.impl</name>
+    <value>org.apache.hadoop.fs.LocalFileSystem</value>
+  </property>
+  <property>
+    <name>hbase.unsafe.stream.capability.enforce</name>
+    <value>false</value>
+  </property>
+</configuration>

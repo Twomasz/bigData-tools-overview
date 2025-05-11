@@ -26,7 +26,7 @@ sleep 180  # wait 3 mins to start running
 docker exec -it my_cassandra cqlsh
 ```
 
-2. Create keyspace in Cassandra
+2. Upload data
 ```sql
 -- Create keyspace
 CREATE KEYSPACE IF NOT EXISTS airline_data
@@ -37,34 +37,36 @@ USE airline_data;
 
 -- Create table
 CREATE TABLE IF NOT EXISTS flights (
-    flight_id UUID PRIMARY KEY,
-    fl_date DATE,
-    op_carrier TEXT,
-    op_carrier_fl_num TEXT,
+    id UUID PRIMARY KEY,
+    year INT,
+    month INT,
+    day_of_month INT,
+    day_of_week INT,
+    dep_time INT,
+    crs_dep_time INT,
+    arr_time INT,
+    crs_arr_time INT,
+    unique_carrier TEXT,
+    flight_num INT,
+    tail_num TEXT,
+    actual_elapsed_time INT,
+    crs_elapsed_time INT,
+    air_time INT,
+    arr_delay INT,
+    dep_delay INT,
     origin TEXT,
     dest TEXT,
-    crs_dep_time TEXT,
-    dep_time TEXT,
-    dep_delay FLOAT,
-    taxi_out FLOAT,
-    wheels_off TEXT,
-    wheels_on TEXT,
-    taxi_in FLOAT,
-    crs_arr_time TEXT,
-    arr_time TEXT,
-    arr_delay FLOAT,
+    distance INT,
+    taxi_in INT,
+    taxi_out INT,
     cancelled BOOLEAN,
     cancellation_code TEXT,
     diverted BOOLEAN,
-    crs_elapsed_time FLOAT,
-    actual_elapsed_time FLOAT,
-    air_time FLOAT,
-    distance FLOAT,
-    carrier_delay FLOAT,
-    weather_delay FLOAT,
-    nas_delay FLOAT,
-    security_delay FLOAT,
-    late_aircraft_delay FLOAT
+    carrier_delay INT,
+    weather_delay INT,
+    nas_delay INT,
+    security_delay INT,
+    late_aircraft_delay INT
 );
 ```
 
@@ -73,18 +75,62 @@ CREATE TABLE IF NOT EXISTS flights (
 pyspark --packages com.datastax.spark:spark-cassandra-connector_2.12:3.5.0
 ```
 
-### HBase
+### HBase (not working)
 
 1. Build database container
 ```shell
-cd ./containers/hbase
+cd ./containers/hbase_min
 docker build -t my-hbase-img .
-docker run -d --name my_hbase -p 16010:16010 -p 9090:9090 -p 8080:8080 my-hbase-img
+docker run -d --name my_hbase -p 16010:16010 -p 9090:9090 -p 8080:8080 -p 16000:16000 -p 16301:16301 -p 2181:2181 my-hbase-img 
 sleep 60
 docker exec -it my_hbase hbase shell
 ```
 
-1. Run **pyspark** locally
+2. Upload data
 ```shell
-pyspark --packages org.apache.hbase.connectors.spark:hbase-spark:2.4.8
+create 'test_table', 'cf'
+put 'test_table', 'row1', 'cf:name', 'Alice'
+put 'test_table', 'row2', 'cf:name', 'Bob'
+put 'test_table', 'row3', 'cf:name', 'Charlie'
+scan 'test_table'
+```
+
+
+3. Run **PySpark** locally
+```shell
+# pyspark --packages org.apache.hbase.connectors.spark:hbase-spark:1.0.1 --files /project_root/containers/hbase_min/hbase-site.xml
+pyspark --packages org.apache.hbase.connectors.spark:hbase-spark:1.0.1 --files /home/tomek/programming/studies/sem2/ztbd/containers/hbase_min/hbase-site.xml 
+
+# just in case add: --jars /path/to/hbase-client-2.4.17.jar,/path/to/hbase-protocol-2.4.17.jar
+```
+
+### Second try with docker-compose (not working)
+
+```shell
+docker run -d --name hbase --hostname hbase-docker \
+  -p 2181:2181 -p 16000:16000 -p 16010:16010 -p 16020:16020 -p 16030:16030 \
+  myhbase
+```
+
+```shell
+# add host to /etc/hosts -> 127.0.0.1 hbase-docker
+sudo sh -c 'echo "127.0.0.1 hbase-docker" >> /etc/hosts' 
+```
+
+```shell
+pyspark --packages org.apache.hbase:hbase-client:2.5.4,\
+org.apache.hbase:hbase-common:2.5.4,org.apache.hbase:hbase-mapreduce:2.5.4 
+```
+
+```python
+conf = {"hbase.zookeeper.quorum": "hbase-docker",
+        "hbase.zookeeper.property.clientPort": "2181",
+        "hbase.mapreduce.inputtable": "NazwaTwojejTabeli"}
+hbase_rdd = spark.sparkContext.newAPIHadoopRDD(
+    "org.apache.hadoop.hbase.mapreduce.TableInputFormat",
+    "org.apache.hadoop.hbase.io.ImmutableBytesWritable",
+    "org.apache.hadoop.hbase.client.Result",
+    conf=conf
+)
+hbase_rdd.collect()
 ```
