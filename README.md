@@ -134,3 +134,16 @@ hbase_rdd = spark.sparkContext.newAPIHadoopRDD(
 )
 hbase_rdd.collect()
 ```
+
+
+### Snowflake
+```shell
+docker pull localstack/snowflake:latest
+export LOCALSTACK_AUTH_TOKEN="ls-RuMEgARu-SiRu-6683-FaVa-XUcA2651435a"
+localstack start
+sudo sh -c 'echo "127.0.0.1 snowflake.localhost.localstack.cloud" >> /etc/hosts' 
+```
+
+```shell
+pyspark --packages net.snowflake:snowflake-jdbc:3.19.0,net.snowflake:spark-snowflake_2.12:3.1.1
+```
