@@ -1,0 +1,18 @@
+services:
+  hive:
+    build: .
+    image: my-hive
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    container_name: hive
+    volumes:
+      - hive-metastore-db:/opt/hive-3.1.3/derby
+      - ./config:/opt/hive-3.1.3/conf:ro
+    environment:
+      HIVE_CONF_DIR: /opt/hive-3.1.3/conf
+      HADOOP_CONF_DIR: /opt/hive-3.1.3/conf
+    ports:
+      - "9083:9083"
+      - "10000:10000"
+volumes:
+  hive-metastore-db:
