@@ -37,7 +37,6 @@ USE airline_data;
 
 -- Create table
 CREATE TABLE IF NOT EXISTS flights (
-    id UUID PRIMARY KEY,
     year INT,
     month INT,
     day_of_month INT,
@@ -66,8 +65,18 @@ CREATE TABLE IF NOT EXISTS flights (
     weather_delay INT,
     nas_delay INT,
     security_delay INT,
-    late_aircraft_delay INT
+    late_aircraft_delay INT,
+    PRIMARY KEY ((year, month), day_of_month, flight_num, unique_carrier)
 );
+
+-- Optymalizacja kompresji
+ALTER TABLE airline_data.flights WITH compression = {'sstable_compression': 'LZ4Compressor'};
+
+-- Zwiększenie cache dla Cassandry
+ALTER TABLE airline_data.flights WITH caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'};
+
+-- Dostosowanie opcji kompaktowania
+ALTER TABLE airline_data.flights WITH compaction = {'class': 'SizeTieredCompactionStrategy', 'max_threshold': 32, 'min_threshold': 4};
 ```
 
 3. Run **PySpark** locally
@@ -147,3 +156,19 @@ sudo sh -c 'echo "127.0.0.1 snowflake.localhost.localstack.cloud" >> /etc/hosts'
 ```shell
 pyspark --packages net.snowflake:snowflake-jdbc:3.19.0,net.snowflake:spark-snowflake_2.12:3.1.1
 ```
+
+
+
+### Pytania do prowadzącego
+1. Mierzenie czasu przez PySpark - czy o to chodzi?
+2. Jaką metodologię dobrać do pomiaru czasu?
+RDD, DataFrame, 100k 200k itp
+
+regulamin zeby sobie przypomniec metodologie
+
+3. Dane... (na moim komputerze upload do Cassandra trwał 40minut (10mln wierszy), a 100 tys to troche mało)
+   
+4. HBase - nie działa integracja z PySparkiem, ale może będzie można zmierzyć czas samego uploadu danych do HBase 
+
+5. Snowflake jest typowo rozwiązaniem chmurowym, więc aby go uruchomić lokalnie potrzebuję lokalnej instancji LocalStack, która emuluje Snowflake. Wymaga to jednak zainstalowania Dockera i uruchomienia kontenera. 
+   Czy to jest ok?
